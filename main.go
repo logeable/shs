@@ -6,7 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/user"
 	"path"
+	"path/filepath"
 
 	"github.com/logeable/shs/middleware"
 )
@@ -25,7 +27,7 @@ func main() {
 
 	log.Println(fmt.Sprintf("port: %d, dir: %s", *port, p))
 
-	fs := http.FileServer(http.Dir(*dir))
+	fs := http.FileServer(http.Dir(p))
 	mux := http.NewServeMux()
 	mux.Handle("/", middleware.LogMiddleware(fs))
 
@@ -35,11 +37,18 @@ func main() {
 
 func getAbsPath(p string) (string, error) {
 	if !path.IsAbs(p) {
+		if p[:2] == "~/" {
+			usr, err := user.Current()
+			if err != nil {
+				return "", err
+			}
+			return filepath.Clean(filepath.Join(usr.HomeDir, p[2:])), nil
+		}
 		wd, err := os.Getwd()
 		if err != nil {
 			return "", err
 		}
-		return path.Clean(path.Join(wd, p)), nil
+		return filepath.Clean(filepath.Join(wd, p)), nil
 	}
 	return p, nil
 }
