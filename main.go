@@ -9,6 +9,7 @@ import (
 	"os/user"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/logeable/shs/middleware"
 )
@@ -37,7 +38,7 @@ func main() {
 
 func getAbsPath(p string) (string, error) {
 	if !path.IsAbs(p) {
-		if p[:2] == "~/" {
+		if strings.HasPrefix(p, "~/") {
 			usr, err := user.Current()
 			if err != nil {
 				return "", err
